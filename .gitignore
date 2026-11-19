@@ -53,3 +53,27 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Project build directories
+/build/
+/bin/
+
+# Generated experiment results
+/results/*
+!/results/.gitkeep
+
+# Python temporary files
+__pycache__/
+*.pyc
+.venv/
+
+# Logs and temporary files
+*.log
+*.tmp
+core
+core.*
+
+# Editor configuration
+.vscode/
+.idea/
+*.swp
