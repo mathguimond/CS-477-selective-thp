@@ -1,0 +1,3 @@
+[submodule "third_party/gapbs"]
+	path = third_party/gapbs
+	url = https://github.com/sbeamer/gapbs.git

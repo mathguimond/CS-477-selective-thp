@@ -1,0 +1,82 @@
+diff --git a/src/aligned_alloc.h b/src/aligned_alloc.h
+new file mode 100644
+index 0000000..8fb8428
+--- /dev/null
++++ b/src/aligned_alloc.h
+@@ -0,0 +1,17 @@
++#ifndef ALIGNED_ALLOC_H
++#define ALIGNED_ALLOC_H
++
++#include <cstdlib>
++#include <new>
++
++template <typename T>
++T* allocate_aligned(size_t count) {
++	void *ptr = nullptr;
++	if (posix_memalign(&ptr, 2UL*1024*1024, count*sizeof(T)) != 0) {
++		throw std::bad_alloc();
++	}
++
++	return static_cast<T*>(ptr);
++}
++
++#endif
+diff --git a/src/builder.h b/src/builder.h
+index 1430d64..17c8326 100644
+--- a/src/builder.h
++++ b/src/builder.h
+@@ -20,6 +20,8 @@
+ #include "timer.h"
+ #include "util.h"
+ 
++#include "aligned_alloc.h"
++
+ 
+ /*
+ GAP Benchmark Suite
+@@ -157,7 +159,7 @@ class BuilderBase {
+       diffs[n] = new_end - n_start;
+     }
+     pvector<SGOffset> sq_offsets = ParallelPrefixSum(diffs);
+-    *sq_neighs = new DestID_[sq_offsets[g.num_nodes()]];
++    *sq_neighs = allocate_aligned<DestID_>(sq_offsets[g.num_nodes()]);
+     *sq_index = CSRGraph<NodeID_, DestID_>::GenIndex(sq_offsets, *sq_neighs);
+     #pragma omp parallel for private(n_start)
+     for (NodeID_ n=0; n < g.num_nodes(); n++) {
+@@ -301,7 +303,7 @@ class BuilderBase {
+                DestID_** neighs) {
+     pvector<NodeID_> degrees = CountDegrees(el, transpose);
+     pvector<SGOffset> offsets = ParallelPrefixSum(degrees);
+-    *neighs = new DestID_[offsets[num_nodes_]];
++    *neighs = allocate_aligned<DestID_>(offsets[num_nodes_]);
+     *index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, *neighs);
+     #pragma omp parallel for
+     for (auto it = el.begin(); it < el.end(); it++) {
+diff --git a/src/graph.h b/src/graph.h
+index 139fdc9..75a3ea6 100644
+--- a/src/graph.h
++++ b/src/graph.h
+@@ -10,6 +10,8 @@
+ #include <iostream>
+ #include <type_traits>
+ 
++#include <cstdlib>
++
+ #include "pvector.h"
+ #include "util.h"
+ 
+@@ -120,12 +122,12 @@ class CSRGraph {
+     if (out_index_ != nullptr)
+       delete[] out_index_;
+     if (out_neighbors_ != nullptr)
+-      delete[] out_neighbors_;
++      std::free(out_neighbors_);
+     if (directed_) {
+       if (in_index_ != nullptr)
+         delete[] in_index_;
+       if (in_neighbors_ != nullptr)
+-        delete[] in_neighbors_;
++        std::free(in_neighbors_);
+     }
+   }
+ 

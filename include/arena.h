@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#define HUGA_PAGE_SIZE (2UL * 1024 * 1024)
+#define HUGE_PAGE_SIZE (2UL * 1024 * 1024)
 
 typedef struct { void *addr; size_t size; } arena_t;
 
